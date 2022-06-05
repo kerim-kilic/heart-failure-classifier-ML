@@ -1,4 +1,4 @@
-# HR attrition classifier
+# Heart failure classifier
 
 The R and R Markdown code in this respository covers several supervised machine learning algorithms as well as a neural network to predict if an patiernt is likely to suffer from heart failure based on several clinical features in the dataset. It includes a logistic regression model, a random forest model, and a neural network.
 
