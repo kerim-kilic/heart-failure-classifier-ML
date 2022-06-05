@@ -275,7 +275,7 @@ nn_wf <- workflow() %>%
 ```{r}
 nn_result <- fit_resamples(nn_wf, 
                            folds,
-                           metrics = metric_set(accuracy, sensitivity, specificity, f_meas)) %>%
+                           metrics = metric_set(accuracy, sensitivity, specificity, f_meas, precision, recall)) %>%
   collect_metrics()
 nn_result
 ```
