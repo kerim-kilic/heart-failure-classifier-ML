@@ -46,6 +46,8 @@ heart_failure_split <- initial_split(heart_failure_data, prop = 0.8, strata = "d
 
 # Recipe
 
+## First recipe
+
 ```{r}
 my_recipe <- training(heart_failure_split) %>%
   recipe(death_event ~ .) %>%
@@ -64,6 +66,24 @@ Glimpse into all the variables of the recipe.
 my_recipe %>% prep() %>% juice() %>% glimpse()
 ```
 
+## Second recipe
+
+```{r}
+my_recipe2 <- training(heart_failure_split) %>%
+  recipe(death_event ~ .) %>%
+  step_dummy(one_hot = TRUE, all_predictors()) %>%
+  step_BoxCox(all_predictors()) %>%
+  step_normalize(all_predictors())
+
+my_recipe2
+```
+
+Glimpse into all the variables of the recipe.
+
+```{r}
+#my_recipe2 %>% prep() %>% juice() %>% glimpse()
+```
+
 # Creating models
 
 ## Logistic regression
@@ -79,6 +99,14 @@ glm <- logistic_reg(mode = "classification") %>%
 rf <- rand_forest(mode = "classification", mtry = tune(), trees = tune()) %>%
   set_engine("ranger")
 ```
+
+## Neural network
+
+```{r}
+nn <- mlp(mode = "classification") %>%
+  set_engine("nnet")
+```
+
 
 # Testing the models
 
@@ -235,6 +263,23 @@ rf_f_score <- final_wf %>%
 - precision = `r round(glm_precision$.estimate[1],3)`
 - recall = `r round(glm_recall$.estimate[1],3)`
 - F score = `r round(glm_f_score$.estimate[1],3)`
+
+## Cross validating the neural network
+
+```{r}
+nn_wf <- workflow() %>%
+  add_recipe(my_recipe2) %>%
+  add_model(nn)
+```
+
+```{r}
+nn_result <- fit_resamples(nn_wf, 
+                           folds,
+                           metrics = metric_set(accuracy, sensitivity, specificity, f_meas)) %>%
+  collect_metrics()
+nn_result
+```
+
 
 # Predicting the test set
 
