@@ -63,3 +63,79 @@ Glimpse into all the variables of the recipe.
 ```{r}
 my_recipe %>% prep() %>% juice() %>% glimpse()
 ```
+
+# Creating models
+
+## Logistic regression
+
+```{r}
+glm <- logistic_reg(mode = "classification") %>%
+  set_engine("glm")
+```
+
+# Testing the models
+
+## Metric sets and folds
+
+```{r}
+#class_metrics <- metric_set(accuracy, precision, recall)
+```
+
+Defining the number of folds for the cross validation to 4 and keeping repeats at 1 to minimize the time to train each model.
+
+```{r}
+folds <- vfold_cv(training(heart_failure_split), v = 4)
+```
+
+## Cross validation logistic regression model
+
+```{r}
+glm_wf <- workflow() %>%
+  add_recipe(my_recipe) %>%
+  add_model(glm) %>%
+  fit(training(heart_failure_split))
+
+glm_wf %>%
+  predict(training(heart_failure_split)) %>%
+  bind_cols(training(heart_failure_split)) %>%
+  conf_mat(truth = death_event, estimate = .pred_class)
+
+glm_accuracy <- glm_wf %>%
+  predict(training(heart_failure_split)) %>%
+  bind_cols(training(heart_failure_split)) %>%
+  accuracy(estimate = .pred_class, truth = death_event)
+
+glm_sensitivity <- glm_wf %>%
+  predict(training(heart_failure_split)) %>%
+  bind_cols(training(heart_failure_split)) %>%
+  sensitivity(estimate = .pred_class, truth = death_event)
+
+glm_specificity <- glm_wf %>%
+  predict(training(heart_failure_split)) %>%
+  bind_cols(training(heart_failure_split)) %>%
+  specificity(estimate = .pred_class, truth = death_event)
+
+glm_precision <- glm_wf %>%
+  predict(training(heart_failure_split)) %>%
+  bind_cols(training(heart_failure_split)) %>%
+  precision(estimate = .pred_class, truth = death_event)
+
+glm_recall <- glm_wf %>%
+  predict(training(heart_failure_split)) %>%
+  bind_cols(training(heart_failure_split)) %>%
+  precision(estimate = .pred_class, truth = death_event)
+
+glm_f_score <- glm_wf %>%
+  predict(training(heart_failure_split)) %>%
+  bind_cols(training(heart_failure_split)) %>%
+  f_meas(estimate = .pred_class, truth = death_event)
+
+# F1 Score = 2*(Recall * Precision) / (Recall + Precision)
+```
+
+- Accuracy = `r round(glm_accuracy$.estimate[1],3)` 
+- sensitivity = `r round(glm_sensitivity$.estimate[1],3)` 
+- specificity = `r round(glm_specificity$.estimate[1],3)`
+- precision = `r round(glm_precision$.estimate[1],3)`
+- recall = `r round(glm_recall$.estimate[1],3)`
+- F score = `r round(glm_f_score$.estimate[1],3)`
