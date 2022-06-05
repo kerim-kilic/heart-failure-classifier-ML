@@ -1,0 +1,65 @@
+---
+title: "heart-failure-classifier"
+author: "Kerim Kilic"
+date: "6/5/2022"
+output: html_document
+---
+
+# Library
+
+This markdown uses the **tidymodels** and **janitor** libraries.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidymodels)
+library(janitor)
+```
+
+# Dataset descriptive analytics and data split
+
+```{r}
+heart_failure_data <- read.csv("heart_failure_clinical_records_dataset.csv") %>%
+  clean_names()
+heart_failure_data %>% glimpse()
+```
+
+Turn nominal predictors into factors.
+
+```{r}
+heart_failure_data <- heart_failure_data %>% 
+  mutate_at(c("anaemia","diabetes","high_blood_pressure","sex","smoking", "death_event"), as.character) 
+heart_failure_data <- heart_failure_data %>%
+  mutate(anaemia = factor(anaemia, levels = c("1", "0")),
+         diabetes = factor(diabetes, levels = c("1", "0")),
+         high_blood_pressure = factor(high_blood_pressure, levels = c("1", "0")),
+         sex = factor(sex, levels = c("1", "0")),
+         smoking = factor(smoking, levels = c("1", "0")),
+         death_event = factor(death_event, levels = c("1", "0")))
+```
+
+Set the seed and split the data in train and test set.
+
+```{r}
+set.seed(2022)
+heart_failure_split <- initial_split(heart_failure_data, prop = 0.8, strata = "death_event")
+```
+
+# Recipe
+
+```{r}
+my_recipe <- training(heart_failure_split) %>%
+  recipe(death_event ~ .) %>%
+  step_string2factor(all_nominal_predictors()) %>%
+  step_corr(all_numeric_predictors()) %>%
+  step_nzv(all_predictors()) %>%
+  step_center(all_numeric_predictors()) %>%
+  step_scale(all_numeric_predictors())
+
+my_recipe
+```
+
+Glimpse into all the variables of the recipe.
+
+```{r}
+my_recipe %>% prep() %>% juice() %>% glimpse()
+```
