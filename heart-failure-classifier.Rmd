@@ -73,6 +73,13 @@ glm <- logistic_reg(mode = "classification") %>%
   set_engine("glm")
 ```
 
+## Random forest model
+
+```{r}
+rf <- rand_forest(mode = "classification", mtry = tune(), trees = tune()) %>%
+  set_engine("ranger")
+```
+
 # Testing the models
 
 ## Metric sets and folds
@@ -139,3 +146,96 @@ glm_f_score <- glm_wf %>%
 - precision = `r round(glm_precision$.estimate[1],3)`
 - recall = `r round(glm_recall$.estimate[1],3)`
 - F score = `r round(glm_f_score$.estimate[1],3)`
+
+## Cross validation random forest model
+
+Creating the workflow using the recipe and the random forest model with the ranger engine.
+
+```{r}
+wf_rf <- workflow() %>%
+  add_recipe(my_recipe) %>%
+  add_model(rf)
+```
+
+Setting the grid for hyper parameter tuning for the *mtry* and number of *trees*.
+
+```{r}
+rf_grid <- expand.grid(mtry = c(1, 3, 5, 7, 10), trees = c(5, 10, 15, 30, 50, 75, 100, 200, 300, 400, 500))
+```
+
+Cross validating and hyper parameter tuning the randomforest model.
+
+```{r}
+rf_tune <- tune_grid(object = rf, 
+                     preprocessor = my_recipe, 
+                     resamples = folds, 
+                     grid = rf_grid, 
+                     metrics = metric_set(accuracy, sensitivity, specificity, f_meas))
+
+rf_result <- show_best(rf_tune, metric = "accuracy")
+
+rf_result
+
+####################################
+### Fitting the entire train set ###
+####################################
+
+rf <- rand_forest(mode = "classification", mtry = 7, trees = 15) %>%
+  set_engine("ranger")
+
+final_wf <- workflow() %>%
+  add_recipe(my_recipe) %>%
+  add_model(rf) %>%
+  fit(training(heart_failure_split))
+```
+
+
+```{r}
+final_wf %>%
+  predict(training(heart_failure_split)) %>%
+  bind_cols(training(heart_failure_split)) %>%
+  conf_mat(truth = death_event, estimate = .pred_class)
+
+rf_accuracy <- final_wf %>%
+  predict(training(heart_failure_split)) %>%
+  bind_cols(training(heart_failure_split)) %>%
+  accuracy(estimate = .pred_class, truth = death_event)
+
+rf_sensitivity <- final_wf %>%
+  predict(training(heart_failure_split)) %>%
+  bind_cols(training(heart_failure_split)) %>%
+  sensitivity(estimate = .pred_class, truth = death_event)
+
+rf_specificity <- final_wf %>%
+  predict(training(heart_failure_split)) %>%
+  bind_cols(training(heart_failure_split)) %>%
+  specificity(estimate = .pred_class, truth = death_event)
+
+rf_precision <- final_wf %>%
+  predict(training(heart_failure_split)) %>%
+  bind_cols(training(heart_failure_split)) %>%
+  precision(estimate = .pred_class, truth = death_event)
+
+rf_recall <- final_wf %>%
+  predict(training(heart_failure_split)) %>%
+  bind_cols(training(heart_failure_split)) %>%
+  precision(estimate = .pred_class, truth = death_event)
+
+rf_f_score <- final_wf %>%
+  predict(training(heart_failure_split)) %>%
+  bind_cols(training(heart_failure_split)) %>%
+  f_meas(estimate = .pred_class, truth = death_event)
+
+# F1 Score = 2*(Recall * Precision) / (Recall + Precision)
+```
+
+- Accuracy = `r round(glm_accuracy$.estimate[1],3)` 
+- sensitivity = `r round(glm_sensitivity$.estimate[1],3)` 
+- specificity = `r round(glm_specificity$.estimate[1],3)`
+- precision = `r round(glm_precision$.estimate[1],3)`
+- recall = `r round(glm_recall$.estimate[1],3)`
+- F score = `r round(glm_f_score$.estimate[1],3)`
+
+# Predicting the test set
+
+## 
