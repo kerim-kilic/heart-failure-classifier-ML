@@ -238,4 +238,95 @@ rf_f_score <- final_wf %>%
 
 # Predicting the test set
 
-## 
+## Random forest model
+
+```{r}
+predict_testing <- final_wf %>%
+  predict(testing(heart_failure_split)) %>%
+  bind_cols(testing(heart_failure_split)) %>%
+  conf_mat(truth = death_event, estimate = .pred_class)
+
+rf_accuracy <- final_wf %>%
+  predict(testing(heart_failure_split)) %>%
+  bind_cols(testing(heart_failure_split)) %>%
+  accuracy(estimate = .pred_class, truth = death_event)
+
+rf_sensitivity <- final_wf %>%
+  predict(testing(heart_failure_split)) %>%
+  bind_cols(testing(heart_failure_split)) %>%
+  sensitivity(estimate = .pred_class, truth = death_event)
+
+rf_specificity <- final_wf %>%
+  predict(testing(heart_failure_split)) %>%
+  bind_cols(testing(heart_failure_split)) %>%
+  specificity(estimate = .pred_class, truth = death_event)
+
+rf_precision <- final_wf %>%
+  predict(testing(heart_failure_split)) %>%
+  bind_cols(testing(heart_failure_split)) %>%
+  precision(estimate = .pred_class, truth = death_event)
+
+rf_recall <- final_wf %>%
+  predict(testing(heart_failure_split)) %>%
+  bind_cols(testing(heart_failure_split)) %>%
+  precision(estimate = .pred_class, truth = death_event)
+
+rf_f_score <- final_wf %>%
+  predict(testing(heart_failure_split)) %>%
+  bind_cols(testing(heart_failure_split)) %>%
+  f_meas(estimate = .pred_class, truth = death_event)
+
+```
+
+- Accuracy = `r round(rf_accuracy$.estimate[1],3)` 
+- sensitivity = `r round(rf_sensitivity$.estimate[1],3)` 
+- specificity = `r round(rf_specificity$.estimate[1],3)`
+- precision = `r round(rf_precision$.estimate[1],3)`
+- recall = `r round(rf_recall$.estimate[1],3)`
+- F score = `r round(rf_f_score$.estimate[1],3)`
+
+## Logistic regression model
+
+```{r}
+predict_testing <- glm_wf %>%
+  predict(testing(heart_failure_split)) %>%
+  bind_cols(testing(heart_failure_split)) %>%
+  conf_mat(truth = death_event, estimate = .pred_class)
+
+glm_accuracy <- glm_wf %>%
+  predict(testing(heart_failure_split)) %>%
+  bind_cols(testing(heart_failure_split)) %>%
+  accuracy(estimate = .pred_class, truth = death_event)
+
+glm_sensitivity <- glm_wf %>%
+  predict(testing(heart_failure_split)) %>%
+  bind_cols(testing(heart_failure_split)) %>%
+  sensitivity(estimate = .pred_class, truth = death_event)
+
+glm_specificity <- glm_wf %>%
+  predict(testing(heart_failure_split)) %>%
+  bind_cols(testing(heart_failure_split)) %>%
+  specificity(estimate = .pred_class, truth = death_event)
+
+glm_precision <- glm_wf %>%
+  predict(testing(heart_failure_split)) %>%
+  bind_cols(testing(heart_failure_split)) %>%
+  precision(estimate = .pred_class, truth = death_event)
+
+glm_recall <- glm_wf %>%
+  predict(testing(heart_failure_split)) %>%
+  bind_cols(testing(heart_failure_split)) %>%
+  precision(estimate = .pred_class, truth = death_event)
+
+glm_f_score <- glm_wf %>%
+  predict(testing(heart_failure_split)) %>%
+  bind_cols(testing(heart_failure_split)) %>%
+  f_meas(estimate = .pred_class, truth = death_event)
+```
+
+- Accuracy = `r round(glm_accuracy$.estimate[1],3)` 
+- sensitivity = `r round(glm_sensitivity$.estimate[1],3)` 
+- specificity = `r round(glm_specificity$.estimate[1],3)`
+- precision = `r round(glm_precision$.estimate[1],3)`
+- recall = `r round(glm_recall$.estimate[1],3)`
+- F score = `r round(glm_f_score$.estimate[1],3)`
